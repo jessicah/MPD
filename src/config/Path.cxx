@@ -106,7 +106,8 @@ ParsePath(std::string_view path)
 			? GetConfiguredHome()
 			: GetHome(std::string{user}.c_str());
 
-		return home / AllocatedPath::FromUTF8Throw(rest);
+		//return home.value / AllocatedPath::FromUTF8Throw(rest).value;
+		return AllocatedPath::Build(home, AllocatedPath::FromUTF8Throw(rest));
 	} else if (path.starts_with('$')) {
 		path.remove_prefix(1);
 
@@ -115,7 +116,8 @@ ParsePath(std::string_view path)
 		if (value.IsNull())
 			throw FmtRuntimeError("No value for variable: {:?}", name);
 
-		return value / AllocatedPath::FromUTF8Throw(rest);
+		//return value.value / AllocatedPath::FromUTF8Throw(rest).value;
+		return AllocatedPath::Build(value, AllocatedPath::FromUTF8Throw(rest));
 	} else if (!PathTraitsUTF8::IsAbsolute(path)) {
 		throw FmtRuntimeError("not an absolute path: {:?}", path);
 	} else {

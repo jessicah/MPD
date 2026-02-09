@@ -5,8 +5,8 @@
 #define MPD_FS_LIST_XX
 
 #include <forward_list>
+#include <filesystem>
 
-class Path;
 class AllocatedPath;
 
 /**
@@ -15,6 +15,6 @@ class AllocatedPath;
  * Throws on error.
  */
 std::forward_list<AllocatedPath>
-ListWildcard(Path pattern);
+ListWildcard(std::filesystem::path pattern);
 
 #endif

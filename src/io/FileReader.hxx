@@ -16,6 +16,7 @@
 
 #include <cstdint>
 #include <utility> // for std::exchange()
+#include <filesystem>
 
 #include <sys/types.h> // for off_t
 
@@ -30,7 +31,7 @@ class FileReader final : public Reader {
 #endif
 
 public:
-	explicit FileReader(Path _path);
+	explicit FileReader(std::filesystem::path _path);
 
 #ifdef _WIN32
 	FileReader(FileReader &&other) noexcept

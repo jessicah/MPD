@@ -4,10 +4,11 @@
 #ifndef MPD_CONFIG_FILE_HXX
 #define MPD_CONFIG_FILE_HXX
 
-class Path;
+#include <filesystem>
+
 struct ConfigData;
 
 void
-ReadConfigFile(ConfigData &data, Path path);
+ReadConfigFile(ConfigData &data, std::filesystem::path path);
 
 #endif

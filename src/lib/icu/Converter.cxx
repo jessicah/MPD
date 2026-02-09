@@ -70,12 +70,12 @@ DoConvert(iconv_t conv, std::string_view src)
 {
 	// TODO: dynamic buffer?
 	char buffer[4096];
-	char *in = const_cast<char *>(src.data());
+	const char *in = src.data();
 	char *out = buffer;
 	size_t in_left = src.size();
 	size_t out_left = sizeof(buffer);
 
-	size_t n = iconv(conv, &in, &in_left, &out, &out_left);
+	size_t n = iconv(conv, const_cast<char**>(&in), &in_left, &out, &out_left);
 
 	if (n == static_cast<size_t>(-1))
 		throw MakeErrno("Charset conversion failed");

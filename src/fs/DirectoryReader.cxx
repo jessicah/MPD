@@ -5,24 +5,24 @@
 #include "lib/fmt/PathFormatter.hxx"
 #include "lib/fmt/SystemError.hxx"
 
-#ifdef _WIN32
+// #ifdef _WIN32
 
-#include <handleapi.h> // for INVALID_HANDLE_VALUE
+// #include <handleapi.h> // for INVALID_HANDLE_VALUE
 
-DirectoryReader::DirectoryReader(Path dir)
-	:handle(FindFirstFile(MakeWildcardPath(dir.c_str()), &data))
-{
-	if (handle == INVALID_HANDLE_VALUE)
-		throw FmtLastError("Failed to open {}", dir);
-}
+// DirectoryReader::DirectoryReader(Path dir)
+// 	:handle(FindFirstFile(MakeWildcardPath(dir.c_str()), &data))
+// {
+// 	if (handle == INVALID_HANDLE_VALUE)
+// 		throw FmtLastError("Failed to open {}", dir);
+// }
 
-#else
+// #else
 
-DirectoryReader::DirectoryReader(Path dir)
-	:dirp(opendir(dir.c_str()))
-{
-	if (dirp == nullptr)
-		throw FmtErrno("Failed to open {}", dir);
-}
+// DirectoryReader::DirectoryReader(Path dir)
+// 	:dirp(opendir(dir.c_str()))
+// {
+// 	if (dirp == nullptr)
+// 		throw FmtErrno("Failed to open {}", dir);
+// }
 
-#endif
+// #endif

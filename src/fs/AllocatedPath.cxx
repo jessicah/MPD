@@ -38,13 +38,7 @@ AllocatedPath::SetSuffix(const_pointer new_suffix) noexcept
 	assert(new_suffix != nullptr);
 	assert(*new_suffix == '.');
 
-	const auto end = value.end();
-	auto begin = end;
-
-	if (auto old = GetSuffix())
-		begin = std::next(value.begin(), old - value.data());
-
-	value.replace(begin, end, new_suffix);
+	value.replace_extension(new_suffix);
 }
 
 void
@@ -56,6 +50,8 @@ AllocatedPath::ChopSeparators() noexcept
 	while (l >= 2 && PathTraitsFS::IsSeparator(p[l - 1])) {
 		--l;
 
-		value.pop_back();
+		// path isn't a string, is this even needed? I think path is normalized,
+		// not entirely sure...
+		//value.pop_back();
 	}
 }

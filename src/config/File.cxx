@@ -21,6 +21,7 @@
 #include "Log.hxx"
 
 #include <cassert>
+#include <filesystem>
 
 static constexpr char CONF_COMMENT = '#';
 
@@ -161,7 +162,7 @@ ReadConfigParam(ConfigData &config_data, BufferedReader &reader,
  * @param directory the directory used to resolve relative paths
  */
 static void
-ReadConfigFile(ConfigData &config_data, BufferedReader &reader, Path directory)
+ReadConfigFile(ConfigData &config_data, BufferedReader &reader, std::filesystem::path directory)
 {
 	while (true) {
 		char *line = reader.ReadLine();
@@ -203,9 +204,13 @@ ReadConfigFile(ConfigData &config_data, BufferedReader &reader, Path directory)
 			}
 
 			for (const auto &path : l)
-				if (PathExists(path))
+			{
+				if (std::filesystem::exists(path()))
+				{
 					ReadConfigFile(config_data, path);
-			continue;
+				}
+				continue;
+			}
 		}
 
 		/* get the definition of that option, and check the
@@ -227,9 +232,9 @@ ReadConfigFile(ConfigData &config_data, BufferedReader &reader, Path directory)
 }
 
 void
-ReadConfigFile(ConfigData &config_data, Path path)
+ReadConfigFile(ConfigData &config_data, std::filesystem::path path)
 {
-	assert(!path.IsNull());
+	assert(!path.empty());
 
 	FmtDebug(config_file_domain, "loading file {:?}", path);
 
@@ -238,7 +243,7 @@ ReadConfigFile(ConfigData &config_data, Path path)
 	BufferedReader reader(file);
 
 	try {
-		ReadConfigFile(config_data, reader, path.GetDirectoryName());
+		ReadConfigFile(config_data, reader, path.parent_path());
 	} catch (...) {
 		std::throw_with_nested(FmtRuntimeError("Error in {:?} line {}",
 						       path,

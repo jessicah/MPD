@@ -10,6 +10,8 @@
 #include <cstddef>
 #include <utility>
 #include <string>
+#include <filesystem>
+#include <type_traits>
 
 /**
  * A path name in the native file system character set.
@@ -25,7 +27,7 @@ class AllocatedPath {
 	using pointer = Traits::pointer;
 	using const_pointer = Traits::const_pointer;
 
-	string value;
+	std::filesystem::path value;
 
 	explicit AllocatedPath(const_pointer _value) noexcept
 		:value(_value) {}
@@ -59,14 +61,14 @@ public:
 	AllocatedPath(AllocatedPath &&other) noexcept
 		:value(std::move(other.value)) {}
 
-	explicit AllocatedPath(Path other) noexcept
-		:value(other.c_str()) {}
+	explicit AllocatedPath(std::filesystem::path other) noexcept
+		:value(other) {}
 
 	~AllocatedPath() noexcept;
 
 	[[gnu::pure]]
-	operator Path() const noexcept {
-		return Path::FromFS(c_str());
+	operator std::filesystem::path() const noexcept {
+		return value;
 	}
 
 	/**
@@ -75,9 +77,8 @@ public:
 	[[gnu::pure]]
 	static AllocatedPath Concat(string_view a, string_view b) noexcept {
 		AllocatedPath result{nullptr};
-		result.value.reserve(a.size() + b.size());
-		result.value.assign(a);
-		result.value.append(b);
+		result.value = a;
+		result.value += b;
 		return result;
 	}
 
@@ -90,13 +91,13 @@ public:
 	}
 
 	[[gnu::pure]]
-	static AllocatedPath Build(Path a, string_view b) noexcept {
-		return Build(a.c_str(), b);
+	static AllocatedPath Build(std::filesystem::path a, string_view b) noexcept {
+		return AllocatedPath(a / b);
 	}
 
 	[[gnu::pure]]
-	static AllocatedPath Build(Path a, Path b) noexcept {
-		return Build(a, b.c_str());
+	static AllocatedPath Build(std::filesystem::path a, std::filesystem::path b) noexcept {
+		return AllocatedPath(a / b);
 	}
 
 	[[gnu::pure]]
@@ -118,7 +119,7 @@ public:
 	}
 
 	[[gnu::pure]]
-	static AllocatedPath Apply(Path base, Path path) noexcept {
+	static AllocatedPath Apply(std::filesystem::path base, std::filesystem::path path) noexcept {
 		return Traits::Apply(base.c_str(), path.c_str());
 	}
 
@@ -235,7 +236,7 @@ public:
 	 */
 	[[gnu::pure]]
 	size_t length() const noexcept {
-		return value.length();
+		return value.native().length();
 	}
 
 	/**
@@ -254,7 +255,7 @@ public:
 	 */
 	[[gnu::pure]]
 	const_pointer data() const noexcept {
-		return value.data();
+		return value.native().data();
 	}
 
 	/**
@@ -264,11 +265,16 @@ public:
 	 */
 	[[gnu::pure]]
 	std::string ToUTF8() const noexcept {
-		return Path{*this}.ToUTF8();
+		if constexpr (std::is_same_v<std::filesystem::path::value_type, wchar_t>) {
+			return FromFS(value).ToUTF8();
+		} else {
+			return value.string();
+		}
 	}
 
 	std::string ToUTF8Throw() const {
-		return Path{*this}.ToUTF8Throw();
+		//return Path{*this}.ToUTF8Throw();
+		throw std::runtime_error("ToUTF8Throw() is not implemented yet");
 	}
 
 	/**
@@ -277,7 +283,10 @@ public:
 	 */
 	[[gnu::pure]]
 	AllocatedPath GetDirectoryName() const noexcept {
-		return Path{*this}.GetDirectoryName();
+		if (value.has_parent_path())
+			return AllocatedPath::FromFS(value.parent_path().c_str());
+		else
+			return AllocatedPath{nullptr};
 	}
 
 	/**
@@ -287,17 +296,8 @@ public:
 	 * nullptr on mismatch.
 	 */
 	[[gnu::pure]]
-	const_pointer Relative(Path other_fs) const noexcept {
+	const_pointer Relative(std::filesystem::path other_fs) const noexcept {
 		return Traits::Relative(c_str(), other_fs.c_str());
-	}
-
-	/**
-	 * Returns the filename suffix (including the dot) or nullptr
-	 * if the path does not have one.
-	 */
-	[[gnu::pure]]
-	const_pointer GetSuffix() const noexcept {
-		return Path{*this}.GetSuffix();
 	}
 
 	/**
@@ -318,7 +318,9 @@ public:
 	 */
 	[[gnu::pure]]
 	AllocatedPath WithSuffix(const_pointer new_suffix) const noexcept {
-		return Path{*this}.WithSuffix(new_suffix);
+		auto path = AllocatedPath{value};
+		path.value.replace_extension(new_suffix);
+		return path;
 	}
 
 	/**
@@ -327,7 +329,10 @@ public:
 	 */
 	[[gnu::pure]]
 	const_pointer GetExtension() const noexcept {
-		return Path{*this}.GetExtension();
+		if (value.has_extension())
+			return value.extension().c_str();
+		else
+			return nullptr;
 	}
 
 	/**
@@ -337,7 +342,7 @@ public:
 
 	[[gnu::pure]]
 	bool IsAbsolute() const noexcept {
-		return Traits::IsAbsolute(value);
+		return value.is_absolute();
 	}
 };
 

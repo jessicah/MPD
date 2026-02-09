@@ -21,6 +21,7 @@
 
 #include <string>
 #include <utility>
+#include <filesystem>
 
 #ifdef HAVE_UN
 #include <sys/stat.h>
@@ -330,7 +331,7 @@ ServerSocket::AddHost(const char *hostname, unsigned port)
 }
 
 void
-ServerSocket::AddPath(Path path)
+ServerSocket::AddPath(std::filesystem::path path)
 {
 #ifdef HAVE_UN
 	unlink(path.c_str());
